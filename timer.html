@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>자리 타이머</title>
+
+<style>
+  body {
+    background:#111;
+    color:white;
+    text-align:center;
+    font-family:sans-serif;
+  }
+
+  .container {
+    display:flex;
+    justify-content:center;
+    gap:30px;
+    margin-top:50px;
+  }
+
+  .seat-wrap {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .seat {
+    width:170px;
+    height:130px;
+    background:#222;
+    border:3px solid #00ff66;
+    border-radius:10px;
+    cursor:pointer;
+    padding-top:10px;
+    font-size:22px;
+  }
+
+  .seat.active { background:#003300; }
+  .seat.end { background:#660000; }
+
+  .time-box {
+    margin-top:8px;
+    background:#000;
+    border-radius:8px;
+    padding:6px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+  }
+
+  .time {
+    font-size:26px;
+    min-width:80px;
+  }
+
+  .time-btn {
+    width:28px;
+    height:28px;
+    font-size:18px;
+    cursor:pointer;
+  }
+
+  .controls {
+    margin-top:10px;
+  }
+
+  button {
+    margin:0 4px;
+    padding:5px 12px;
+    font-size:14px;
+    cursor:pointer;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>자리 타이머</h1>
+
+<div class="container">
+
+  <!-- 자리들 -->
+  <script>
+    for (let i = 0; i < 5; i++) {
+      document.write(`
+      <div class="seat-wrap">
+        <div class="seat" onclick="startTimer(${i})">
+          자리 ${i+1}
+          <div class="time-box">
+            <button class="time-btn" onclick="changeTime(${i}, -60, event)">−</button>
+            <div class="time" id="t${i}">10:00</div>
+            <button class="time-btn" onclick="changeTime(${i}, 60, event)">+</button>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="p${i}" onclick="togglePause(${i}, event)">멈춤</button>
+          <button onclick="resetTimer(${i}, event)">초기화</button>
+        </div>
+      </div>
+      `);
+    }
+  </script>
+
+</div>
+
+<script>
+  const timers = Array(5).fill(null);
+  const timeLeft = Array(5).fill(600);
+  const paused = Array(5).fill(false);
+
+  function startTimer(i) {
+    if (timers[i]) return;
+
+    const seat = document.querySelectorAll('.seat')[i];
+    seat.classList.remove('end');
+    seat.classList.add('active');
+
+    timers[i] = setInterval(() => {
+      if (paused[i]) return;
+
+      timeLeft[i]--;
+      updateTime(i);
+
+      if (timeLeft[i] <= 0) {
+        clearInterval(timers[i]);
+        timers[i] = null;
+        seat.classList.remove('active');
+        seat.classList.add('end');
+        document.getElementById('t'+i).innerText = '종료';
+        document.getElementById('p'+i).innerText = '멈춤';
+        paused[i] = false;
+      }
+    }, 1000);
+  }
+
+  function togglePause(i, e) {
+    e.stopPropagation();
+    if (!timers[i]) return;
+
+    paused[i] = !paused[i];
+    document.getElementById('p'+i).innerText = paused[i] ? '재개' : '멈춤';
+  }
+
+  function resetTimer(i, e) {
+    e.stopPropagation();
+    clearInterval(timers[i]);
+    timers[i] = null;
+    paused[i] = false;
+    timeLeft[i] = 600;
+
+    const seat = document.querySelectorAll('.seat')[i];
+    seat.classList.remove('active', 'end');
+
+    updateTime(i);
+    document.getElementById('p'+i).innerText = '멈춤';
+  }
+
+  function changeTime(i, amount, e) {
+    e.stopPropagation();
+    timeLeft[i] = Math.max(0, timeLeft[i] + amount);
+    updateTime(i);
+  }
+
+  function updateTime(i) {
+    const m = String(Math.floor(timeLeft[i]/60)).padStart(2,'0');
+    const s = String(timeLeft[i]%60).padStart(2,'0');
+    document.getElementById('t'+i).innerText = `${m}:${s}`;
+  }
+</script>
+
+</body>
+</html>
